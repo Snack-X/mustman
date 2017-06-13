@@ -1,0 +1,20 @@
+{
+  "name": "mustman",
+  "version": "0.0.0",
+  "description": "Music Streamer Manager",
+  "license": "MIT",
+  "dependencies": {
+    "koa": "^2.2.0",
+    "koa-mount": "^3.0.0",
+    "koa-router": "^7.2.0",
+    "koa-static": "^3.0.0",
+    "mz": "^2.6.0",
+    "split.js": "^1.3.5",
+    "sqlite": "^2.8.0",
+    "webpack": "^2.6.1"
+  },
+  "scripts": {
+    "build": "webpack",
+    "start": "node src/serverApp.js"
+  }
+}
