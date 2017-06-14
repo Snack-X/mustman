@@ -15,6 +15,7 @@
   },
   "scripts": {
     "build": "webpack",
+    "watch": "webpack --watch",
     "start": "node src/serverApp.js"
   }
 }

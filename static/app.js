@@ -613,7 +613,7 @@ return Split;
 /***/ (function(module, exports) {
 
 /*! Micro Template from Underscore.js | MIT License | git.io/underscore */
-/*! START OF BORROWED CODE */
+/**** START OF BORROWED CODE ****/
 
 // By default, Underscore uses ERB-style template delimiters, change the
 // following template settings to use alternative delimiters.
@@ -702,9 +702,9 @@ var template = function(text) {
   return template;
 };
 
-/*! END OF BORROWED CODE */
+/**** END OF BORROWED CODE ****/
 
-// Templates are cached on first use
+// Templates are compiled and cached on the first use
 var cache = {};
 
 module.exports = function(name) {
@@ -713,10 +713,10 @@ module.exports = function(name) {
     // Removing whitespaces from template
     tpl = tpl.replace(/(^\s+|\s+$)/g, "");
     tpl = tpl.replace(/>\s+</g, "><");
-    cache[name] = G.template(tpl);
+    cache[name] = template(tpl);
   }
 
-  return template[name];
+  return cache[name];
 };
 
 
@@ -724,16 +724,106 @@ module.exports = function(name) {
 /* 2 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var Split = __webpack_require__(0);
-var T = __webpack_require__(1);
+const Split = __webpack_require__(0);
+const T = __webpack_require__(1);
 
-window.addEventListener("load", function() {
-  var third = 100 / 3;
-  var split = Split([".pane-left", ".pane-middle", ".pane-right"], {
+const b64e = s => btoa(encodeURIComponent(s));
+const b64d = s => decodeURIComponent(atob(s));
+
+// Evil hacks
+[ HTMLDocument, HTMLElement ].forEach(p => {
+  p.prototype.$ = p.prototype.querySelector;
+  p.prototype.$$ = p.prototype.querySelectorAll;
+});
+
+// Global variables
+const LEFT = document.$(".pane-left");
+const MIDDLE = document.$(".pane-middle");
+const RIGHT = document.$(".pane-right");
+let split;
+
+function onLoad() {
+  // Initialize split panes
+  const third = 100 / 3;
+  split = Split([".pane-left", ".pane-middle", ".pane-right"], {
     sizes: [ third, third, third ],
     minSize: 150,
   });
-});
+
+  // Load album artists by default
+  loadAlbumArtists();
+}
+
+function loadAlbumArtists() {
+  let url = "/db/album_artists";
+  fetch(url).then(res => res.json())
+    .then(json => {
+      const items = json.map(a => ({ id: b64e(a), name: a }));
+
+      LEFT.innerHTML = T("list-view")({
+        title: "Album Artists",
+        filterId: "filter-albumArtist",
+        items: items
+      });
+      MIDDLE.innerHTML = "";
+      RIGHT.innerHTML = "";
+
+      LEFT.$$(".item").forEach(el => el.addEventListener("click", e => {
+        let target = e.target;
+        let id = target.getAttribute("data-id");
+        id = b64d(id);
+
+        if(LEFT.$(".selected"))
+          LEFT.$(".selected").classList.remove("selected");
+        target.classList.add("selected");
+
+        loadAlbums(id);
+      }));
+    });
+}
+
+function loadAlbums(albumArtist) {
+  let url = "/db/albums?albumArtist=" + encodeURIComponent(albumArtist)
+  fetch(url).then(res => res.json())
+    .then(json => {
+      const items = json.map(a => ({ id: b64e(a), name: a }));
+
+      MIDDLE.innerHTML = T("list-view")({
+        title: "Albums by '" + albumArtist + "'",
+        filterId: "filter-album",
+        items: items
+      });
+      RIGHT.innerHTML = "";
+
+      MIDDLE.$$(".item").forEach(el => el.addEventListener("click", e => {
+        let target = e.target;
+        let id = target.getAttribute("data-id");
+        id = b64d(id);
+
+        if(MIDDLE.$(".selected"))
+          MIDDLE.$(".selected").classList.remove("selected");
+        target.classList.add("selected");
+
+        let albumArtist = b64d(LEFT.$(".selected").getAttribute("data-id"));
+        loadTracks(albumArtist, id);
+      }));
+    });
+}
+
+function loadTracks(albumArtist, album) {
+  let url = "/db/tracks?albumArtist=" + encodeURIComponent(albumArtist);
+  url += "&album=" + encodeURIComponent(album);
+
+  fetch(url).then(res => res.json())
+    .then(json => {
+      RIGHT.innerHTML = T("list-view-track")({
+        title: album,
+        items: json
+      });
+    });
+}
+
+window.addEventListener("load", onLoad);
 
 
 /***/ })

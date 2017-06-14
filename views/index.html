@@ -22,7 +22,25 @@
       </div>
       <div class="items">
         <% for(var i = 0 ; i < items.length ; i++) { %>
-          <div class="item" data-id="<%= items[i].id %>"><%= items[i].name %></div>
+          <% if(items[i].name === "") { %>
+            <div class="item empty" data-id="<%= items[i].id %>">(empty)</div>
+          <% } else { %>
+            <div class="item" data-id="<%= items[i].id %>"><%= items[i].name %></div>
+          <% } %>
+        <% } %>
+      </div>
+    </div>
+  </script>
+
+  <script type="text/html" id="tpl-list-view-track">
+    <div class="list-view tracks">
+      <div class="title"><span><%= title %></span></div>
+      <div class="items">
+        <% for(var i = 0 ; i < items.length ; i++) { %>
+          <div class="item" data-id="<%= items[i].id %>">
+            <div class="title"><%= items[i].title %></div>
+            <div class="artist"><%= items[i].artist %></div>
+          </div>
         <% } %>
       </div>
     </div>

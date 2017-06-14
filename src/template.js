@@ -99,8 +99,8 @@ module.exports = function(name) {
     // Removing whitespaces from template
     tpl = tpl.replace(/(^\s+|\s+$)/g, "");
     tpl = tpl.replace(/>\s+</g, "><");
-    cache[name] = G.template(tpl);
+    cache[name] = template(tpl);
   }
 
-  return template[name];
+  return cache[name];
 };

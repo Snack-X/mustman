@@ -25,32 +25,62 @@
   height: 100%;
 }
 
-.list-view .title {
+.list-view > .title {
   height: 36px;
   line-height: 36px;
   background: #ddd;
   text-align: center;
 }
 
-.list-view .filter {
+.list-view > .filter {
   width: 100%;
   height: 36px;
 }
 
-.list-view .filter input {
+.list-view > .filter > input {
   width: 100%;
   height: 100%;
 }
 
-.list-view .items {
+.list-view > .items {
   height: calc(100% - 72px);
-  overflow-y: scroll;
+  overflow-y: auto;
 }
 
-.list-view .items .item {
+.list-view > .items > .item {
   padding: 8px;
   font-size: 16px;
+  font-weight: bold;
   border-bottom: 1px solid #eee;
+}
+
+.list-view > .items > .item.empty {
+  font-style: italic;
+  font-weight: normal;
+  color: #888;
+}
+
+.list-view > .items > .item.selected {
+  background-color: #33f;
+  color: #fff;
+}
+
+.list-view.tracks > .items {
+  height: calc(100% - 36px);
+}
+
+.list-view.tracks > .items > .item { }
+
+.list-view.tracks > .items > .item > .title { }
+.list-view.tracks > .items > .item > .artist {
+  margin-top: 6px;
+  font-size: 0.8rem;
+  font-weight: normal;
+  color: #777;
+}
+
+.list-view.tracks > .items > .item.selected > .artist {
+  color: #ddd;
 }
 
 .gutter {

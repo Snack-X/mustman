@@ -64,13 +64,15 @@ async function checkDuplicatedEntry(db, entry) {
     }
 
     let id = sha256(entry);
-    let title = path.basename(entry), album = "", artist = "", albumArtist = "";
+    let title = "", album = "", artist = "", albumArtist = "";
     if(probe.format.tags) {
-      if(probe.format.tags.title) title = probe.format.tags.title;
-      if(probe.format.tags.album) album = probe.format.tags.album;
-      if(probe.format.tags.artist) artist = probe.format.tags.artist;
-      if(probe.format.tags.album_artist) albumArtist = probe.format.tags.album_artist;
+      if(probe.format.tags.title) title = probe.format.tags.title.trim();
+      if(probe.format.tags.album) album = probe.format.tags.album.trim();
+      if(probe.format.tags.artist) artist = probe.format.tags.artist.trim();
+      if(probe.format.tags.album_artist) albumArtist = probe.format.tags.album_artist.trim();
     }
+
+    if(title === "") title = path.basename(entry);
 
     let query = "INSERT OR REPLACE INTO files";
     query += " (id, filepath, title, album, artist, album_artist)";
