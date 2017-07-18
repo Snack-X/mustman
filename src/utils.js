@@ -3,8 +3,6 @@ const fs = require("mz/fs");
 const path = require("path");
 const { exec } = require("mz/child_process");
 
-const db = require("sqlite");
-
 async function readdirRecursive(baseEntry, filter) {
   const stat = await fs.stat(baseEntry);
 
@@ -41,12 +39,6 @@ module.exports = {
   },
 
   readdirRecursive,
-
-  async sqliteOpen(filename) {
-    await db.open(filename, { Promise });
-    await db.migrate({ migrationsPath: path.join(__dirname, "migrations") });
-    return db;
-  },
 
   sha256(str) {
     const sha256 = crypto.createHash("sha256");

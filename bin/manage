@@ -2,14 +2,12 @@
 
 const path = require("path");
 const utils = require("../src/utils");
-const { Probe, readdirRecursive, sqliteOpen, sha256 } = utils;
-
-async function openDatabase() {
-  return await sqliteOpen(path.join(__dirname, "../music.db"));
-}
+const { Probe, readdirRecursive, sha256 } = utils;
+const DB = require("../src/dbUtils");
 
 //======================================
 // Parsing arguments
+
 const usage = `
 Usage: bin/manage list             List added entries
        bin/manage add <path>       Add and scan entry
@@ -56,8 +54,9 @@ for(let i = 1 ; i < argv.length ; i++) {
 // List
 
 async function listEntries() {
-  const db = await openDatabase();
-  const entries = await db.all("SELECT * FROM entries");
+  const db = await DB.load();
+  const col = DB.getCollection(db, "entries");
+  const entries = col.find({});
 
   console.log("List of added entries:");
   console.log(entries.map(e => "  " + e.path).join("\n"));
@@ -70,10 +69,11 @@ async function addEntry() {
   const entry = path.resolve(parameters[0]);
   if(!entry) printUsage();
 
-  const db = await openDatabase();
+  const db = await DB.load();
+  const colEntries = DB.getCollection(db, "entries");
 
   // Check existing entries
-  const existingEntries = await db.all("SELECT * FROM entries");
+  const existingEntries = colEntries.find({});
 
   for(const dir of existingEntries) {
     if(dir.path === entry) {
@@ -93,6 +93,12 @@ async function addEntry() {
         console.error(`[ERROR] To replace this entry with the parent entry, run 'bin/add "${entry}" -f'`);
         return false;
       }
+      else {
+        console.error(`[INFO] '${entry}' is a parent entry of existing entry '${dir.path}'`);
+        console.error(`[INFO] This entry will be replaced with the parent entry`);
+
+        await db.run("DELETE FROM entries WHREE path = ?", entry);
+      }
     }
   }
 
@@ -104,6 +110,7 @@ async function addEntry() {
   console.log(`Found ${entries.length} files`);
 
   // Read and save ID3 tags
+  const colFiles = DB.getCollection(db, "entries");
   console.log("Reading ID3 tags");
   console.log("This may take a while, hold on...");
 
@@ -132,10 +139,7 @@ async function addEntry() {
 
     if(title === "") title = path.basename(childEntry);
 
-    let query = "INSERT OR REPLACE INTO files";
-    query += " (id, filepath, title, album, artist, album_artist)";
-    query += " VALUES (?, ?, ?, ?, ?, ?)";
-    await db.run(query, id, entry, title, album, artist, albumArtist);
+    colFiles.insert({ id: id, path: childEntry, title, album, artist, albumArtist });
 
     insertCount += 1;
   }
@@ -143,6 +147,11 @@ async function addEntry() {
   const skippedCount = entries.length - insertCount;
   console.log(`Finished reading ${insertCount} files`);
   if(skippedCount > 0) console.log(`${skippedCount} files were skipped`);
+
+  // Add entry
+  colEntries.insert({ path: entry });
+
+  await db.save();
 }
 
 //======================================
